@@ -1,0 +1,142 @@
+<html>
+  <head>
+    <style>
+      body {
+        background: linear-gradient(to right, #f0b8c2, #f0b8c2, #c2f0b8);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .container {
+        margin-top: 50px;
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+      h1 {
+        font-size: 36px;
+        margin-bottom: 40px;
+        text-align: center;
+      }
+      label, input, button, textarea {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+      #plaintext {
+        width: 200px;
+        min-width: 200px;
+        max-width: 400px;
+        resize: both;
+        overflow: auto;
+        font-size: 18px;
+        padding: 10px;
+      }
+      #encrypted, #key {
+        width: 200px;
+        min-width: 200px;
+        max-width: 400px;
+        overflow: auto;
+        font-size: 18px;
+        padding: 10px;
+      }
+      button {
+        background: #c2f0b8;
+        color: black;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+<script>
+      function solitaireEncrypt() {
+document.getElementById("encrypted").addEventListener("click", function() {
+  navigator.clipboard.writeText(encrypted);
+});
+document.getElementById("key").addEventListener("click", function() {
+  navigator.clipboard.writeText(key);
+});
+        function create_deck() {
+          let deck = [];
+          for (let i = 1; i <= 54; i++) {
+            deck.push(i);
+          }
+          deck = deck.sort(() => Math.random() - 0.5);
+          return deck;
+        }
+      
+        function solitaire_shuffle(deck, jokers) {
+          for (let i = 0; i < jokers.length; i++) {
+            let joker_index = deck.indexOf(jokers[i]);
+            deck[joker_index] = 0;
+            deck.splice((joker_index + 1) % deck.length, 0, jokers[i]);
+          }
+        
+          for (let i = 1; i <= 54; i++) {
+            let j = deck.indexOf(i);
+            let k = (i % 26) + 1;
+            [deck[j], deck[k]] = [deck[k], deck[j]];
+          }
+        }
+      
+        function generate_key(deck, length) {
+          let key = '';
+          while (key.length < length) {
+            let jokers = [53, 54];
+            solitaire_shuffle(deck, jokers);
+            let top_card = deck[0];
+            if (jokers.includes(top_card)) {
+              continue;
+            }
+            let binary_value = top_card.toString(2).padStart(6, '0');
+            key += binary_value;
+          }
+          return key;
+        }
+      
+        function encrypt(plaintext, key) {
+          let plaintext_bits = '';
+          for (let i = 0; i < plaintext.length; i++) {
+            plaintext_bits += plaintext.charCodeAt(i).toString(2).padStart(8, '0');
+          }
+          let encrypted_bits = '';
+          for (let i = 0; i < plaintext_bits.length; i++) {
+            encrypted_bits += (plaintext_bits[i] === key[i]) ? '0' : '1';
+          }
+          let encrypted = btoa(String.fromCharCode.apply(null, encrypted_bits.match(/.{1,8}/g).map(function(x) {
+            return parseInt(x, 2);
+          })));
+          return encrypted;
+        }
+      
+        let plaintext = document.getElementById("plaintext").value;
+        let deck = create_deck();
+        let key = generate_key(deck,plaintext.length * 8);
+let encrypted = encrypt(plaintext, key);
+  document.getElementById("encrypted").value = encrypted;
+  document.getElementById("key").value = key;}
+</script>
+
+  </head>
+  <body>
+    <div class="container">
+      <h1>Solitaire Encryption</h1>
+<p>Encrypted using the <a href="https://en.wikipedia.org/wiki/Solitaire_(cipher)" target="_blank">Solitaire Cipher</a> algorithm.</p>
+      <label for="plaintext">Plaintext:</label><br>
+      <textarea id="plaintext"></textarea><br>
+      <button onclick="solitaireEncrypt()">Encrypt</button>
+      <div id="encrypted-container">
+  <br><br>
+  <p>
+    <label for="encrypted">Encrypted message:</label><br>
+    <input type="text" id="encrypted" readonly>
+  </p>
+  <p>
+    <label for="key">Encryption key:</label><br>
+    <input type="text" id="key" readonly>
+  </p>      </div>
+    </div>
+</body>
+</html>
